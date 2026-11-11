@@ -6,39 +6,32 @@ import os
 import requests
 import base64
 
-# ============================================================
-# 1. CONFIGURAÇÃO DA PÁGINA E CSS PERSONALIZADO (TEMA ROXO)
-# ============================================================
 st.set_page_config(page_title="Meu Spotify Wrapped | Portfólio", page_icon="", layout="wide")
 
 css_personalizado = """
 <style>
-    /* Importa uma fonte moderna (opcional) */
+    
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
     }
 
-    /* Cor de fundo principal - Roxo bem escuro */
     .stApp {
         background-color: #1A0B2E;
         color: #F3E8FF; /* Texto quase branco, com um toque de lilás */
     }
     
-    /* Estilo da barra lateral */
     [data-testid="stSidebar"] {
         background-color: #241042;
         border-right: 1px solid #3D2066;
     }
     
-    /* Cor dos títulos - Lilás claro */
     h1, h2, h3 {
         color: #D8B4E2 !important; 
         font-weight: 600;
     }
     
-    /* Estilo dos cards de métricas */
     [data-testid="stMetricValue"] {
         color: #FF6B9E; /* Rosa para os números principais */
         font-weight: bold;
@@ -47,7 +40,6 @@ css_personalizado = """
         color: #C77DFF; /* Lilás para as legendas das métricas */
     }
     
-    /* Estilo das abas */
     .stTabs [data-baseweb="tab-list"] {
         gap: 24px;
         border-bottom: 1px solid #3D2066;
@@ -61,12 +53,11 @@ css_personalizado = """
         border-bottom-color: #FF6B9E !important;
     }
     
-    /* Estilo dos textos pequenos (legendas das capas) */
     .stCaption {
         color: #A78BFA !important; 
     }
     
-    /* Estilo dos botões */
+   
     .stButton>button {
         background-color: #FF6B9E;
         color: white;
@@ -80,7 +71,6 @@ css_personalizado = """
         color: white;
     }
 
-    /* Links */
     a {
         color: #FF6B9E !important;
         text-decoration: none;
@@ -90,7 +80,6 @@ css_personalizado = """
         text-decoration: underline;
     }
     
-    /* Inputs */
     .stTextInput>div>div>input {
         background-color: #241042;
         color: #F3E8FF;
@@ -100,9 +89,7 @@ css_personalizado = """
 """
 st.markdown(css_personalizado, unsafe_allow_html=True)
 
-# ============================================================
-# 2. FUNÇÕES DE DADOS
-# ============================================================
+
 @st.cache_data
 def carregar_dados(pasta="data"):
     padrao_audio = os.path.join(pasta, "*Audio*.json")
@@ -143,9 +130,6 @@ def carregar_dados(pasta="data"):
     df["mes"] = df["timestamp_local"].dt.to_period("M").astype(str)
     return df
 
-# ============================================================
-# 3. FUNÇÕES DA API DO SPOTIFY
-# ============================================================
 @st.cache_data(ttl=3600)
 def obter_token_spotify(client_id, client_secret):
     auth_string = f"{client_id}:{client_secret}"
@@ -186,15 +170,10 @@ def buscar_capa_album(album_nome, artista_nome, token):
                 return images[0]["url"]
     return None
 
-# ============================================================
-# 4. INTERFACE DO STREAMLIT
-# ============================================================
-# Cabeçalho estilizado
 st.markdown("<h1 style='text-align: center;'> Meu Spotify Wrapped</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #A78BFA;'>Análise de dados do meu histórico musical • <a href='https://seuportfolio.com'>Voltar ao Portfólio</a></p>", unsafe_allow_html=True)
 st.divider()
 
-# Sidebar para credenciais
 with st.sidebar:
     st.header("🔑 Configuração")
     st.markdown("Insira suas credenciais do [Spotify Developer](https://developer.spotify.com/dashboard).")
@@ -205,7 +184,6 @@ with st.sidebar:
         st.cache_data.clear()
         st.rerun()
 
-# Carrega os dados
 with st.spinner("Carregando seus dados do Spotify..."):
     df = carregar_dados("data")
 
@@ -221,9 +199,6 @@ if client_id and client_secret:
     else:
         st.sidebar.error("❌ Falha na autenticação.")
 
-# ============================================================
-# EXIBIÇÃO DOS DADOS
-# ============================================================
 col1, col2, col3 = st.columns(3)
 col1.metric("Total de Músicas", f"{len(df):,}")
 col2.metric("Horas Ouvidas", f"{df['minutos'].sum() / 60:,.0f}")
@@ -231,7 +206,6 @@ col3.metric("Artistas Diferentes", f"{df['artista'].nunique():,}")
 
 st.divider()
 
-# --- TOP ÁLBUNS COM CAPAS ---
 st.header("💿 Top Álbuns")
 
 top_albuns = df.groupby(["album", "artista"])["minutos"].sum().sort_values(ascending=False).head(6)
@@ -252,11 +226,8 @@ else:
 
 st.divider()
 
-# --- ABAS ---
 tab1, tab2, tab3 = st.tabs(["🎤 Top Artistas", "📈 Evolução", "⏰ Hábitos"])
 
-# Para os gráficos do Streamlit ficarem coloridos e combinarem com o tema,
-# precisamos usar a biblioteca Altair, que permite definir cores personalizadas.
 import altair as alt
 
 with tab1:
