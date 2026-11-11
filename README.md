@@ -27,6 +27,3 @@ Uma análise interativa e visual dos meus dados de audição do Spotify, transfo
 4. Crie um app no [Spotify Developer](https://developer.spotify.com/dashboard) e pegue seu *Client ID* e *Client Secret*.
 5. Rode o app: `streamlit run wrapped_app.py`
 6. Insira suas credenciais na barra lateral do app.
-
----
-Desenvolvido por [Seu Nome](https://linkedin.com/in/seu-perfil)
