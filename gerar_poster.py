@@ -7,19 +7,13 @@ import base64
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
-# ============================================================
-# 1. CONFIGURAÇÕES DO POSTER
-# ============================================================
 LARGURA = 1080
 ALTURA = 1080
-COR_FUNDO = (26, 11, 46)      # Roxo escuro
-COR_TEXTO = (243, 232, 255)   # Quase branco
-COR_DESTAQUE = (255, 107, 158) # Rosa
-COR_SECUNDARIA = (199, 125, 255) # Lilás
+COR_FUNDO = (26, 11, 46)     
+COR_TEXTO = (243, 232, 255)  
+COR_DESTAQUE = (255, 107, 158) 
+COR_SECUNDARIA = (199, 125, 255) 
 
-# ============================================================
-# 2. CARREGAR DADOS E API
-# ============================================================
 def carregar_dados():
     arquivos = glob.glob(os.path.join("data", "*Audio*.json")) + glob.glob(os.path.join("data", "*Video*.json"))
     registros = []
@@ -59,34 +53,26 @@ def buscar_capa(album, artista, token):
             return Image.open(BytesIO(img_data)).resize((250, 250))
     return None
 
-# ============================================================
-# 3. DESENHAR O POSTER
-# ============================================================
 def gerar_poster(df, token):
     img = Image.new("RGB", (LARGURA, ALTURA), COR_FUNDO)
     draw = ImageDraw.Draw(img)
     
-    # Tenta carregar fontes do sistema (Windows)
     try:
         fonte_titulo = ImageFont.truetype("arialbd.ttf", 60)
         fonte_subtitulo = ImageFont.truetype("arial.ttf", 30)
         fonte_destaque = ImageFont.truetype("arialbd.ttf", 80)
         fonte_pequena = ImageFont.truetype("arial.ttf", 20)
     except:
-        # Fallback se não achar as fontes
         fonte_titulo = ImageFont.load_default()
         fonte_subtitulo = ImageFont.load_default()
         fonte_destaque = ImageFont.load_default()
         fonte_pequena = ImageFont.load_default()
 
-    # Cabeçalho
     draw.text((60, 50), "MEU SPOTIFY WRAPPED", font=fonte_titulo, fill=COR_TEXTO)
     draw.text((60, 120), "Uma análise dos meus últimos meses de música", font=fonte_subtitulo, fill=COR_SECUNDARIA)
     
-    # Linha divisória
     draw.line([(60, 170), (LARGURA - 60, 170)], fill=COR_DESTAQUE, width=3)
     
-    # Métricas Gerais
     total_horas = df["minutos"].sum() / 60
     total_musicas = len(df)
     total_artistas = df["artista"].nunique()
@@ -102,7 +88,6 @@ def gerar_poster(df, token):
     
     draw.line([(60, 370), (LARGURA - 60, 370)], fill=(61, 32, 102), width=1)
     
-    # Top 3 Álbuns
     draw.text((60, 400), "TOP ÁLBUNS", font=fonte_subtitulo, fill=COR_TEXTO)
     
     top_albuns = df.groupby(["album", "artista"])["minutos"].sum().sort_values(ascending=False).head(3)
@@ -118,18 +103,15 @@ def gerar_poster(df, token):
         draw.text((330, y_offset + 60), artista[:30], font=fonte_pequena, fill=COR_SECUNDARIA)
         draw.text((330, y_offset + 100), f"{minutos:.0f} minutos ouvidos", font=fonte_pequena, fill=COR_DESTAQUE)
         
-        y_offset += 190 # Pula para o próximo álbum
+        y_offset += 190 
     
-    # Rodapé
+    
     draw.line([(60, ALTURA - 80), (LARGURA - 60, ALTURA - 80)], fill=COR_DESTAQUE, width=3)
     draw.text((60, ALTURA - 60), "Gerado por mim com Python & Streamlit 🎧", font=fonte_pequena, fill=COR_SECUNDARIA)
     
     img.save("poster_linkedin.png")
     print("✅ Poster salvo como 'poster_linkedin.png'!")
 
-# ============================================================
-# 4. EXECUÇÃO
-# ============================================================
 if __name__ == "__main__":
     print("Carregando dados...")
     df = carregar_dados()
