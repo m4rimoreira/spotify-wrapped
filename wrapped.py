@@ -5,13 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# ============================================================
-# 1. CARREGAMENTO DOS DADOS (Ajustado para Extended History)
-# ============================================================
 
 def carregar_dados(pasta="data"):
     """Lê todos os JSONs (áudio e vídeo) e retorna um DataFrame."""
-    # Pega apenas arquivos que contém 'Audio' ou 'Video' no nome
     padrao_busca = os.path.join(pasta, "*Audio*.json")
     padrao_busca_video = os.path.join(pasta, "*Video*.json")
     arquivos = glob.glob(padrao_busca) + glob.glob(padrao_busca_video)
@@ -32,7 +28,6 @@ def carregar_dados(pasta="data"):
 
     df = pd.DataFrame(registros)
 
-    # O formato Extended já vem com esses nomes de colunas, mas vamos garantir
     colunas_necessarias = ["master_metadata_track_name", "master_metadata_album_artist_name", 
                            "master_metadata_album_album_name", "ms_played", "ts", "skipped"]
     
@@ -40,7 +35,6 @@ def carregar_dados(pasta="data"):
         if col not in df.columns:
             df[col] = None
 
-    # Renomeando para facilitar o uso
     df = df.rename(columns={
         "master_metadata_track_name": "musica",
         "master_metadata_album_artist_name": "artista",
@@ -50,14 +44,11 @@ def carregar_dados(pasta="data"):
         "skipped": "skip"
     })
 
-    # Limpeza: remove linhas onde não há música (ex: podcasts ou anúncios que não têm metadados)
     df = df.dropna(subset=["musica", "artista", "ms"])
     
-    # Converte timestamp (que vem em UTC no padrão ISO) para o fuso de SP
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
     df["timestamp_local"] = df["timestamp"].dt.tz_convert("America/Sao_Paulo")
     
-    # Criação de colunas úteis
     df["minutos"] = df["ms"] / 60000
     df["hora"] = df["timestamp_local"].dt.hour
     df["dia_semana"] = df["timestamp_local"].dt.day_name()
@@ -66,9 +57,6 @@ def carregar_dados(pasta="data"):
 
     return df
 
-# ============================================================
-# 2. MÉTRICAS
-# ============================================================
 
 def tempo_total(df):
     total_min = df["minutos"].sum()
@@ -131,10 +119,6 @@ def artistas_novos_por_mes(df, n=20):
     primeira_vez.columns = ["artista", "mes_estreia"]
     return primeira_vez.sort_values("mes_estreia").head(n)
 
-# ============================================================
-# 3. VISUALIZAÇÕES
-# ============================================================
-
 def salvar_grafico(fig, nome, pasta="output"):
     os.makedirs(pasta, exist_ok=True)
     caminho = os.path.join(pasta, nome)
@@ -145,7 +129,6 @@ def salvar_grafico(fig, nome, pasta="output"):
 def gerar_graficos(df):
     sns.set_theme(style="whitegrid")
 
-    # Top artistas
     fig, ax = plt.subplots(figsize=(10, 6))
     top_artistas(df).plot(kind="barh", ax=ax, color="mediumseagreen")
     ax.invert_yaxis()
@@ -153,7 +136,6 @@ def gerar_graficos(df):
     ax.set_xlabel("Minutos")
     salvar_grafico(fig, "top_artistas.png")
 
-    # Top músicas
     fig, ax = plt.subplots(figsize=(10, 6))
     tm = top_musicas(df)
     tm.index = [f"{m} — {a}" for m, a in tm.index]
@@ -163,7 +145,6 @@ def gerar_graficos(df):
     ax.set_xlabel("Minutos")
     salvar_grafico(fig, "top_musicas.png")
 
-    # Top álbuns
     albuns = top_albuns(df)
     if albuns is not None:
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -174,7 +155,6 @@ def gerar_graficos(df):
         ax.set_xlabel("Minutos")
         salvar_grafico(fig, "top_albuns.png")
 
-    # Horário de pico
     fig, ax = plt.subplots(figsize=(12, 5))
     ouvintes_por_hora(df).plot(kind="bar", ax=ax, color="mediumpurple")
     ax.set_title("Minutos ouvidos por hora do dia")
@@ -182,14 +162,12 @@ def gerar_graficos(df):
     ax.set_ylabel("Minutos")
     salvar_grafico(fig, "por_hora.png")
 
-    # Dia da semana
     fig, ax = plt.subplots(figsize=(10, 5))
     ouvintes_por_dia_semana(df).plot(kind="bar", ax=ax, color="coral")
     ax.set_title("Minutos ouvidos por dia da semana")
     ax.set_ylabel("Minutos")
     salvar_grafico(fig, "por_dia_semana.png")
 
-    # Evolução mensal
     fig, ax = plt.subplots(figsize=(14, 5))
     evolucao_mensal(df).plot(kind="line", marker="o", ax=ax, color="teal")
     ax.set_title("Minutos ouvidos por mês")
@@ -197,9 +175,6 @@ def gerar_graficos(df):
     ax.tick_params(axis="x", rotation=45)
     salvar_grafico(fig, "evolucao_mensal.png")
 
-# ============================================================
-# 4. RELATÓRIO TEXTO
-# ============================================================
 
 def gerar_relatorio(df, pasta="output"):
     os.makedirs(pasta, exist_ok=True)
@@ -270,9 +245,6 @@ def gerar_relatorio(df, pasta="output"):
     print(texto)
     print(f"\n✓ Relatório completo salvo em {caminho}")
 
-# ============================================================
-# 5. MAIN
-# ============================================================
 
 if __name__ == "__main__":
     print("Iniciando processamento do Spotify Wrapped...\n")
